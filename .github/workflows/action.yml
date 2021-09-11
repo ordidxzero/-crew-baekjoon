@@ -1,0 +1,49 @@
+name: PR Validation Action
+on:
+  # main branch로 pr이 들어오는 경우 액션을 실행한다.
+  pull_request_target:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+      - name: Check Diff
+        run: |
+          cd tasks
+          npm i
+          npm run diff
+      - name: The job has failed
+        uses: actions/github-script@v4
+        if: ${{ failure() }}
+        with:
+          script: |
+            await github.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              body:"다른 사람의 코드를 변경했는지 확인하시기 바랍니다.",
+              event: "REQUEST_CHANGES"
+            })
+            await github.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              state: "closed"
+            })
+      - name: The job has succeeded
+        if: ${{ success() }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            await github.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            })
