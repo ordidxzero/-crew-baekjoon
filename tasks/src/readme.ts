@@ -13,9 +13,11 @@ export const getReadmeTemplate = (): string => fs.readFileSync(TEMPLATE_DIR, { e
 export const saveReadme = (data: string): void => fs.writeFileSync(README_DIR, data, { encoding: 'utf-8' });
 
 // 제출한 유저로 이동하는 태그를 생성하는 함수
-export const generateAtagOfSolution = (username: string): string => {
-  return `<a href="src/${username}">${username}</a>`;
-};
+export const generateAtagOfSolution =
+  (id: number) =>
+  (username: string): string => {
+    return `<a href="src/${username}/${id}">${username}</a>`;
+  };
 
 // ISolvedProblem 데이터를 README.md에 맞게 변환하는 함수
 export const convertSolvedProblemsToREADMEData = (data: ISolvedProblem[]): { problemCount: number; solutions: string } => {
@@ -25,7 +27,7 @@ export const convertSolvedProblemsToREADMEData = (data: ISolvedProblem[]): { pro
       <td>
         <a href="${problem.baekjoonUrl}">${problem.id}. ${problem.title}</a>
       </td>
-      <td style="text-align:center">${problem.people.map(generateAtagOfSolution).join('<br />')}
+      <td style="text-align:center">${problem.people.map(generateAtagOfSolution(problem.id)).join('<br />')}
       </td>
       <td style="text-align:center">
         <img src="https://static.solved.ac/tier_small/${problem.level}.svg" height="14">
